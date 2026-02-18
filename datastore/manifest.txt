@@ -16,7 +16,6 @@ Script Path: src/data_prep.py
 Git Hash: 0d2bf93
 Timestamp: 2026-02-18 16:08:26
 Description: Production dataset for model deployment
-Comments: Production dataset for model deployment
 
 =================================================================================
 
@@ -28,6 +27,16 @@ Script Path: src/data_prep.py
 Git Hash: 0d2bf939fbcac772ad0375f4017a8f1ff1ee28a0
 Timestamp: 2026-02-18 16:09:37
 Description: Development dataset for training and testing
-Comments: Development dataset for training and testing
+
+=================================================================================
+
+# 04
+Data File: v4_dev_cleaned.csv
+Data Type: dev_cleaned
+File Location: datastore/processed/
+Script Path: src/data_prep.py
+Git Hash: 61b0e3e27efe92f169c0bf37da7c629cb9d86f05
+Timestamp: 2026-02-18 18:58:38
+Description: Cleaned development dataset with feature engineering - first 7000 samples
 
 =================================================================================

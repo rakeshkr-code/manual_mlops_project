@@ -217,7 +217,6 @@ Script Path: src/data_prep.py
 Git Hash: {git_hash}
 Timestamp: {timestamp}
 Description: {description}
-Comments: {description}
 
 =================================================================================
 """
