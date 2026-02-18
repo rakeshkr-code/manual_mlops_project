@@ -7,3 +7,27 @@ Timestamp: 2026-02-12T23:56:13+05:30
 Description: No script is used to generate this version. Raw dataset given with the problem statement. 
 
 =================================================================================
+
+# 02
+Data File: v2_production.csv
+Data Type: production
+File Location: datastore/processed/
+Script Path: src/data_prep.py
+Git Hash: 0d2bf93
+Timestamp: 2026-02-18 16:08:26
+Description: Production dataset for model deployment
+Comments: Production dataset for model deployment
+
+=================================================================================
+
+# 03
+Data File: v3_development.csv
+Data Type: development
+File Location: datastore/processed/
+Script Path: src/data_prep.py
+Git Hash: 0d2bf939fbcac772ad0375f4017a8f1ff1ee28a0
+Timestamp: 2026-02-18 16:09:37
+Description: Development dataset for training and testing
+Comments: Development dataset for training and testing
+
+=================================================================================

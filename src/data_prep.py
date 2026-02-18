@@ -54,12 +54,46 @@ def split_dev_production(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     
     return df_dev, df_production
 
+def get_info(df: pd.DataFrame): 
+    """
+    Get basic info about the dataframe.
+    Args:
+        df (pd.DataFrame): Input dataframe.
+    Returns:
+        None
+    """
+    print("\n" + "="*80)
+    print("DATAFRAME HEAD:")
+    print("-"*80)
+    print(df.head(2))
+    print("\n" + "="*80)
+    print("DATAFRAME INFO:")
+    print("-"*80)
+    print(df.info())
+    print("\n" + "="*80)
+    print("DATAFRAME DESCRIPTION:")
+    print("-"*80)
+    print(df.describe())
+    print("\n" + "="*80)
+    print("MISSING VALUES:")
+    print("-"*80)
+    print(df.isnull().sum())
+    print("\n" + "="*80)
+    print("TARGET VARIABLE DISTRIBUTION:")
+    print("-"*80)
+    print(df['Machine failure'].value_counts())
+    print(f"Failure Rate: {df['Machine failure'].mean()*100:.2f}%")
+    print("\n" + "="*80)
+    print("PRODUCT TYPE DISTRIBUTION:")
+    print("-"*80)
+    print(df['Type'].value_counts())
+
 def save_versioned_data(
         df: pd.DataFrame, version: int, data_type: str, 
         description: str, production: bool = False
     ) -> Path:
     """
-    Save versioned dataset and update manifest.
+    Save versioned dataset (pandas df) and update manifest.
     Args:
         df (pd.DataFrame): Dataframe to save.
         version (int): Version number (e.g., 1, 2, 3).
@@ -107,8 +141,10 @@ def update_manifest(version: int, filename: str, data_type: str, description: st
         userinput_git = input("Do you want to include the latest git hash automatically? (y/n): ").strip().lower()
         if userinput_git == 'y' or userinput_git == 'yes':
             try:
-                git_hash = subprocess.check_output(['git', 'rev-parse', '--short', 'HEAD'], 
-                                                  cwd=ROOT_DIR).decode('ascii').strip()
+                # Get git hash automatically from the latest commit by running subprocess command from python
+                output = subprocess.check_output(["git", "log", "-1", "--format=%H %cI"], 
+                                                  cwd=ROOT_DIR, text=True)
+                git_hash, _ = output.strip().split()    # other info like commit timestamp is ignored for now
                 print(f"✓ Git hash obtained from latest commit automatically: {git_hash}")
             except:
                 git_hash = "Not a git repository"
@@ -151,18 +187,16 @@ if __name__ == "__main__":
     print(f"ROOT_DIR: {ROOT_DIR}")
     print(f"CONFIG: {CONFIG_PATH}")
     
-    # Target: Separating Production Data from Development Data before doing any cleaning or preprocessing or EDA 
+    # Target 1: Separating Production Data from Development Data before doing any cleaning or preprocessing or EDA 
     # to prevent data leakage and ensure realistic model evaluation and deployment.
     # - Load raw data, split into development and production sets, save versioned datasets, and update manifest.
+    # ------------------------- [ DONE ]
+    # Target 2: Printing the basic stats of the development dataset using a function get_info() 
+    # that prints head, info, describe, missing values, target distribution, and product type distribution.
+
+    print("\n[STEP 1] Loading development data...")
+    dev_data_path = ROOT_DIR / config['data_path']['processed_dir'] / 'v3_development.csv'
+    df_dev = load_df(dev_data_path)
+    print("\n[STEP 2] Printing basic stats of development data...")
+    get_info(df_dev)
     
-    # 1. Load raw data
-    print("\n[STEP 1] Loading raw data...")
-    raw_data_path = ROOT_DIR / config['data_path']['raw_file']
-    df_raw = load_df(raw_data_path)
-    # 2. Split into development and production sets
-    print("\n[STEP 2] Splitting data into development and production sets...")
-    df_dev, df_production = split_dev_production(df_raw)
-    # 3. Save versioned datasets
-    print("\n[STEP 3] Saving versioned datasets...")
-    save_versioned_data(df_production, 2, "production", "Production dataset for model deployment", production=True)
-    save_versioned_data(df_dev, 3, "development", "Development dataset for training and testing")
