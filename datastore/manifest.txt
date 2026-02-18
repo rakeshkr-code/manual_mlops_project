@@ -1,0 +1,9 @@
+# 01
+Data File: v1_raw_ai4i2020.csv
+File Location: manual_mlops_project/datastore/raw/
+Script Path: None
+Git Hash: 2fd492d9624d4d018ce499a0fd572b907f976ae6
+Timestamp: 2026-02-12T23:56:13+05:30
+Description: No script is used to generate this version. Raw dataset given with the problem statement. 
+
+=================================================================================
