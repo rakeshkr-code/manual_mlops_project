@@ -88,6 +88,53 @@ def get_info(df: pd.DataFrame):
     print("-"*80)
     print(df['Type'].value_counts())
 
+def clean_and_engineer_features(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Clean data and perform feature engineering.
+    Args:
+        df (pd.DataFrame): Input dataframe.
+    Returns:
+        pd.DataFrame: Cleaned and feature-engineered dataframe.
+    """
+    print("\n" + "="*80)
+    print("FEATURE ENGINEERING")
+    print("="*80)
+    
+    # Create a copy
+    df_clean = df.copy()
+    
+    # Drop identifier columns (not useful for prediction)
+    df_clean = df_clean.drop(['UDI', 'Product ID'], axis=1)
+    print("✓ Dropped identifier columns: UDI, Product ID")
+    
+    # Encode categorical 'Type' column (L, M, H quality variants)
+    le = LabelEncoder()
+    df_clean['Type_Encoded'] = le.fit_transform(df_clean['Type'])
+    df_clean = df_clean.drop('Type', axis=1)
+    print(f"✓ Encoded 'Type' column: {dict(zip(le.classes_, le.transform(le.classes_)))}")
+    
+    # Save label encoder for later use
+    encoder_path = ROOT_DIR / 'models' / 'label_encoder.pkl'
+    joblib.dump(le, encoder_path)
+    print(f"✓ Saved label encoder to: {encoder_path}")
+    
+    # Create interaction features
+    df_clean['Temp_Diff'] = df_clean['Process temperature [K]'] - df_clean['Air temperature [K]']
+    df_clean['Power'] = df_clean['Torque [Nm]'] * df_clean['Rotational speed [rpm]'] / 9549  # Power in kW
+    print("✓ Created interaction features: Temp_Diff, Power")
+    
+    # Check for any remaining missing values
+    if df_clean.isnull().sum().sum() > 0:
+        print("⚠ Warning: Missing values found, filling with median")
+        df_clean = df_clean.fillna(df_clean.median())
+    else:
+        print("✓ No missing values found")
+    
+    print(f"✓ Final feature count: {df_clean.shape[1]} columns")
+    print(f"✓ Feature names: {df_clean.columns.tolist()}")
+    
+    return df_clean
+
 def save_versioned_data(
         df: pd.DataFrame, version: int, data_type: str, 
         description: str, production: bool = False
@@ -193,10 +240,20 @@ if __name__ == "__main__":
     # ------------------------- [ DONE ]
     # Target 2: Printing the basic stats of the development dataset using a function get_info() 
     # that prints head, info, describe, missing values, target distribution, and product type distribution.
+    # ------------------------- [ DONE ]
+    # Target 3: Write a function clean_and_engineer_features(df) to perform basic cleaning and feature engineering on the development dataset,
+    # and save the cleaned version as a new versioned dataset with manifest update.
+    # ------------------------- [ IN PROGRESS ]
 
-    print("\n[STEP 1] Loading development data...")
+    # Load development dataset
+    print("\n[STEP 1] Loading raw data...")
     dev_data_path = ROOT_DIR / config['data_path']['processed_dir'] / 'v3_development.csv'
-    df_dev = load_df(dev_data_path)
-    print("\n[STEP 2] Printing basic stats of development data...")
-    get_info(df_dev)
-    
+    df_dev = load_df(file_path=dev_data_path)
+    # Cleaning and feature engineering
+    print("\n[STEP 2] Cleaning and engineering features...")
+    df_dev_clean = clean_and_engineer_features(df_dev)
+    print(df_dev_clean.head(2))
+    # Save cleaned development dataset as a new versioned dataset
+    version = 4
+    description = "Cleaned development dataset with feature engineering - first 7000 samples"
+    save_versioned_data(df_dev_clean, version, "dev_cleaned", description)
