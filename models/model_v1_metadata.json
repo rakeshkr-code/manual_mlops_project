@@ -2,7 +2,7 @@
   "version": 1,
   "model_filename": "model_v1.pkl",
   "training_date": "2026-02-20T16:48:45",
-  "git_commit_hash": "N/A",
+  "git_commit_hash": "900638f9a9a8a97bc8b943dc745d9210bb63e23f",
   "dataset_version": "v4_dev_cleaned.csv",
   "config": {
     "project_name": "Predictive_Maintenance_Manual_MLOps",

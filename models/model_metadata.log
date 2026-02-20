@@ -5,7 +5,7 @@ MODEL VERSION: v1
 Model File: model_v1.pkl
 Metadata Json File: model_v1_metadata.json
 Training Date: 2026-02-20T16:48:45
-Git Hash: N/A
+Git Hash: 900638f9a9a8a97bc8b943dc745d9210bb63e23f
 Dataset Version: v4_dev_cleaned.csv
 
 HYPERPARAMETERS:

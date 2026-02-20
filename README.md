@@ -6,9 +6,13 @@ Manual MLOps Project | IITM Campus Course - MLOps Lab | Prof Sudarsun Santhiappa
 ![Screenshot](screenshots/Screenshot%202026-02-18%20175712.png)
 
 ### SS From Commit `0f32632`:
-![Screenshot](screenshots/Screenshot%2026-02-18%180900.png)
-![Screenshot](screenshots/Screenshot%2026-02-18%180947.png)
-![Screenshot](screenshots/Screenshot%2026-02-18%181006.png)
+![Screenshot](<screenshots/Screenshot 2026-02-18 180900.png>)
+![Screenshot](<screenshots/Screenshot 2026-02-18 180947.png>)
+![Screenshot](<screenshots/Screenshot 2026-02-18 181006.png>)
 
 ### SS From Commit `61b0e3e`:
-![Screenshot](screenshots/Screenshot%2026-02-18%185925.png)
+![Screenshot](<screenshots/Screenshot 2026-02-18 185925.png>)
+
+### SS From Commit `900638f`:
+![Screenshot](<screenshots/Screenshot 2026-02-20 170516.png>)
+![Screenshot](<screenshots/Screenshot 2026-02-20 170535.png>)
