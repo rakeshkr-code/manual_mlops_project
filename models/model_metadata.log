@@ -1,0 +1,36 @@
+
+================================================================================
+MODEL VERSION: v1
+================================================================================
+Model File: model_v1.pkl
+Metadata Json File: model_v1_metadata.json
+Training Date: 2026-02-20T16:48:45
+Git Hash: N/A
+Dataset Version: v4_dev_cleaned.csv
+
+HYPERPARAMETERS:
+{
+  "algorithm": "RandomForest",
+  "n_estimators": 100,
+  "max_depth": 10,
+  "min_samples_split": 5,
+  "min_samples_leaf": 2,
+  "class_weight": "balanced"
+}
+
+TRAINING METRICS:
+  Accuracy:  0.9979
+  Precision: 0.9605
+  Recall:    0.9865
+  F1-Score:  0.9733
+  ROC-AUC:   0.9998
+
+TEST METRICS:
+  Accuracy:  0.9821
+  Precision: 0.8605
+  Recall:    0.6607
+  F1-Score:  0.7475
+  ROC-AUC:   0.9790
+
+================================================================================
+

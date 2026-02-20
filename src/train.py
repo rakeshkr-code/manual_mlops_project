@@ -6,6 +6,8 @@ import joblib
 from datetime import datetime
 import subprocess
 import json
+from typing import Any, Dict, List
+from sklearn.base import BaseEstimator
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import StandardScaler
@@ -170,6 +172,143 @@ def evaluate_model(model: RandomForestClassifier, X_train: pd.DataFrame, y_train
     
     return metrics
 
+def get_git_hash() -> str:
+    # Get user permission to commit code and retrieve Git hash
+    """
+    Get the Git hash of the latest commit after optionally committing current code changes. 
+     This is important for traceability and reproducibility of the training run. 
+     The user is prompted to allow an automated commit of any current code changes, and if they agree, 
+     the script will stage all changes, commit with a user-provided message (or a default one), 
+     and then retrieve the Git hash from the latest commit. If the user declines or if any errors occur during Git operations, 
+     a warning is printed and 'N/A' is returned for the Git hash, with instructions to manually record it 
+     in the manifest file for traceability.
+    Returns:
+        git_hash (str): The Git hash of the latest commit if successful, or 'N/A' if not.
+    """
+    try:
+        permission = input("Do you want to commit the current code changes and retrieve the Git hash? (y/n): ").strip().lower()
+        if permission == 'y' or permission == 'yes':
+            # Stage all changes
+            subprocess.run(['git', 'add', '.'], check=True)
+            # Commit changes with message from user input else a generic one
+            commit_message = input("Enter a commit message (or press Enter for default): ").strip()
+            if not commit_message:
+                commit_message = "Automated commit from training script after saving model and metrics"
+                print(f"No commit message entered. Using default commit message.")
+            subprocess.run(['git', 'commit', '-m', commit_message], check=True)
+            # Get git hash automatically from the latest commit by running subprocess command from python
+            output = subprocess.check_output(["git", "log", "-1", "--format=%H %cI"], 
+                                                cwd=ROOT_DIR, text=True)
+            git_hash, _ = output.strip().split()    # other info like commit timestamp is ignored for now
+            print(f"✓ Git hash obtained from latest automated commit: {git_hash}")
+            return git_hash
+        else:
+            print("Warning: No Git commit was made. Please manually record the Git hash in the manifest file for traceability.")
+            return 'N/A'
+    except subprocess.CalledProcessError as e:
+        print(f"Error during Git operations: {e}")
+        print("Warning: Git operations failed. Please put the Git hash manually in the manifest file for traceability.")
+        return 'N/A'
+    except Exception as e:
+        print(f"An unexpected error occurred during Git operations: {e}")
+        print("Warning: An unexpected error occurred during Git operations. Please put the Git hash manually in the manifest file for traceability.")
+        return 'N/A'
+
+def save_model_and_metadata(model: BaseEstimator, scaler: BaseEstimator, metrics: Dict[str, Any], 
+                            feature_names: List[str], dataset_version: str) -> tuple[int, Dict[str, Any]]:
+    """
+    Save the trained model, scaler, and metadata (including performance metrics and feature importance).
+    Args:
+        model (BaseEstimator): The trained machine learning model to be saved.
+        scaler (BaseEstimator): The fitted scaler object used for feature scaling, to be saved for future use in inference.
+        metrics (Dict[str, Any]): A dictionary containing performance metrics of the model on training and testing data.
+        feature_names (List[str]): A list of feature names corresponding to the features used in training the model.
+        dataset_version (str): The version of the dataset used for training, to be included in the metadata for traceability.
+    Returns:
+        version (int): The version number assigned to the saved model.
+        metadata (Dict[str, Any]): A dictionary ...
+    """
+    model_dir = ROOT_DIR / config['deployment']['model_dir']
+    model_dir.mkdir(parents=True, exist_ok=True)
+    # Determine version number
+    existing_models = list(model_dir.glob('model_v*.pkl'))
+    print(f"✓ Found {len(existing_models)} existing model(s) in {model_dir}")
+    version = len(existing_models) + 1
+    print(f"  Assigning version number: v{version} to the new model")
+    # Save model
+    model_filename = f'model_v{version}.pkl'
+    model_path = model_dir / model_filename
+    joblib.dump(model, model_path)
+    print(f"\n✓ Saved model to: {model_path}")
+    
+    # Prepare metadata
+    git_hash = get_git_hash()  # Get Git hash with user permission and error handling
+    metadata = {
+        'version': version,
+        'model_filename': model_filename,
+        'training_date': datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        'git_commit_hash': git_hash,
+        'dataset_version': dataset_version,
+        'config': config,
+        'metrics': metrics,
+        'feature_names': feature_names,
+        'model_type': config['model_params']['algorithm'],
+        'scaler_path': 'models/scaler.pkl',
+        'label_encoder_path': 'models/label_encoder.pkl'
+    }
+    
+    # Save metadata as JSON
+    metadata_filename = f'model_v{version}_metadata.json'
+    metadata_path = model_dir / metadata_filename
+    with open(metadata_path, 'w') as f:
+        json.dump(metadata, f, indent=2)
+    print(f"✓ Saved metadata to: {metadata_path}")
+    
+    # Append to model_metadata.log
+    log_path = model_dir / 'model_metadata.log'
+    log_entry = f"""
+{'='*80}
+MODEL VERSION: v{version}
+{'='*80}
+Model File: {model_filename}
+Metadata Json File: {metadata_filename}
+Training Date: {metadata['training_date']}
+Git Hash: {metadata['git_commit_hash']}
+Dataset Version: {metadata['dataset_version']}
+
+HYPERPARAMETERS:
+{json.dumps(config['model_params'], indent=2)}
+
+TRAINING METRICS:
+  Accuracy:  {metrics['train']['accuracy']:.4f}
+  Precision: {metrics['train']['precision']:.4f}
+  Recall:    {metrics['train']['recall']:.4f}
+  F1-Score:  {metrics['train']['f1_score']:.4f}
+  ROC-AUC:   {metrics['train']['roc_auc']:.4f}
+
+TEST METRICS:
+  Accuracy:  {metrics['test']['accuracy']:.4f}
+  Precision: {metrics['test']['precision']:.4f}
+  Recall:    {metrics['test']['recall']:.4f}
+  F1-Score:  {metrics['test']['f1_score']:.4f}
+  ROC-AUC:   {metrics['test']['roc_auc']:.4f}
+
+{'='*80}
+
+"""
+    
+    with open(log_path, 'a') as f:
+        f.write(log_entry)
+    print(f"✓ Updated model log: {log_path}")
+    
+    # Update config with current model
+    config['deployment']['current_model'] = model_filename
+    with open(CONFIG_PATH, 'w') as f:
+        yaml.dump(config, f, default_flow_style=False, sort_keys=False)
+    print(f"✓ Updated config.yaml with current model: {model_filename}")
+    
+    return version, metadata
+
 if __name__ == "__main__":
     print("\n" + "="*80)
     print("MODEL TRAINING PIPELINE")
@@ -178,7 +317,9 @@ if __name__ == "__main__":
     print(f"CONFIG: {CONFIG_PATH}")
 
     # Load training data
-    train_file = ROOT_DIR / config['data_path']['processed_dir'] / 'v4_dev_cleaned.csv'
+    dataset_version = 'v4_dev_cleaned.csv'
+    # train_file = ROOT_DIR / config['data_path']['processed_dir'] / (dataset_version := 'v4_dev_cleaned.csv')
+    train_file = ROOT_DIR / config['data_path']['processed_dir'] / dataset_version
     df = load_train_data(train_file)
     
     # Prepare features and target
@@ -201,4 +342,8 @@ if __name__ == "__main__":
     
     # Evaluate model
     metrics = evaluate_model(model, X_train_scaled, y_train, X_test_scaled, y_test)
+    
+    # Save model and metadata
+    version, metadata = save_model_and_metadata(model, scaler, metrics, X.columns.tolist(), dataset_version)
+    print(f"\n✓ Training pipeline completed successfully. Model version: v{version}")
     

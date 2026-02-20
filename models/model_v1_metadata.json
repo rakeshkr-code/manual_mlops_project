@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "model_filename": "model_v1.pkl",
+  "training_date": "2026-02-20T16:48:45",
+  "git_commit_hash": "N/A",
+  "dataset_version": "v4_dev_cleaned.csv",
+  "config": {
+    "project_name": "Predictive_Maintenance_Manual_MLOps",
+    "author": "Rakesh Kumar Mandal",
+    "data_path": {
+      "raw_file": "datastore/raw/v1_raw_ai4i2020.csv",
+      "processed_dir": "datastore/processed/",
+      "production_dir": "datastore/production/",
+      "current_version": "v1"
+    },
+    "processing": {
+      "dev_split": 7000,
+      "production_split": 3000
+    },
+    "train": {
+      "test_size": 0.2,
+      "stratify": true
+    },
+    "model_params": {
+      "algorithm": "RandomForest",
+      "n_estimators": 100,
+      "max_depth": 10,
+      "min_samples_split": 5,
+      "min_samples_leaf": 2,
+      "class_weight": "balanced"
+    },
+    "random_state": 42,
+    "deployment": {
+      "model_dir": "models/",
+      "current_model": "model_v1.pkl",
+      "port": 8000,
+      "host": "0.0.0.0"
+    }
+  },
+  "metrics": {
+    "train": {
+      "accuracy": 0.9978571428571429,
+      "precision": 0.9605263157894737,
+      "recall": 0.9864864864864865,
+      "f1_score": 0.9733333333333334,
+      "roc_auc": 0.9997914426140532
+    },
+    "test": {
+      "accuracy": 0.9821428571428571,
+      "precision": 0.8604651162790697,
+      "recall": 0.6607142857142857,
+      "f1_score": 0.7474747474747475,
+      "roc_auc": 0.9790338010204082
+    }
+  },
+  "feature_names": [
+    "Air temperature [K]",
+    "Process temperature [K]",
+    "Rotational speed [rpm]",
+    "Torque [Nm]",
+    "Tool wear [min]",
+    "Type_Encoded",
+    "Temp_Diff",
+    "Power"
+  ],
+  "model_type": "RandomForest",
+  "scaler_path": "models/scaler.pkl",
+  "label_encoder_path": "models/label_encoder.pkl"
+}
